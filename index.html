@@ -15,7 +15,7 @@
     h1, h2 {
       text-align: center;
     }
-    .resultado, .jogador {
+    .resultado, .jogador, .total-ganho {
       background: #fff;
       border-radius: 8px;
       padding: 10px;
@@ -79,6 +79,7 @@
   <button class="botao" onclick="carregarResultado()">Conferir Resultado</button>
   <div class="resultado" id="resultado"></div>
   <div id="jogadores"></div>
+  <div class="total-ganho" id="total"></div>
   <div class="fogos" id="fogos"></div>
 
   <script>
@@ -131,12 +132,13 @@
               <div class="numeros">
                 ${j.aposta.map(n => `<div class="numero ${numerosSorteados.includes(n) ? 'acerto' : 'erro'}">${n}</div>`).join('')}
               </div>
-              <p>${qtdAcertos} acertos${premio > 0 ? ` - R$ ${premio}` : ''}</p>
+              <p>${qtdAcertos} acertos${premio > 0 ? ` - R$${premio.toFixed(2).replace('.', ',')}` : ''}</p>
             </div>
           `;
         });
 
         document.getElementById('jogadores').innerHTML = html;
+        document.getElementById('total').innerHTML = `<h3>Total ganho neste concurso: R$${totalGeral.toFixed(2).replace('.', ',')}</h3>`;
 
         if (destaque) {
           const fogos = document.getElementById('fogos');
