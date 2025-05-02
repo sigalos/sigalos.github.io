@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conferidor Lotofácil</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 10px;
+      background: #f2f2f2;
+      color: #333;
+    }
+    h1, h2 {
+      text-align: center;
+    }
+    .resultado, .jogador {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 15px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    .numeros {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+    .numero {
+      width: 30px;
+      height: 30px;
+      text-align: center;
+      line-height: 30px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    .acerto {
+      background: #7FFF7F;
+    }
+    .erro {
+      background: #FF7F7F;
+    }
+    .botao {
+      display: block;
+      width: 100%;
+      padding: 15px;
+      font-size: 16px;
+      margin: 20px 0;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .fogos {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(0,0,0,0.8) url('https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif') center center no-repeat;
+      background-size: cover;
+      z-index: 9999;
+      display: none;
+    }
+    .ganhou {
+      animation: flash 1s infinite;
+    }
+    @keyframes flash {
+      0% { background-color: #fff; }
+      50% { background-color: yellow; }
+      100% { background-color: #fff; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Conferidor Lotofácil</h1>
+  <button class="botao" onclick="carregarResultado()">Conferir Resultado</button>
+  <div class="resultado" id="resultado"></div>
+  <div id="jogadores"></div>
+  <div class="fogos" id="fogos"></div>
+
+  <script>
+    const jogadores = [
+      { nome: "Moacir", aposta: [1, 2, 4, 5, 7, 8, 10, 12, 13, 14, 16, 18, 20, 23, 25] },
+      { nome: "Gargamel", aposta: [2, 4, 5, 7, 10, 12, 14, 15, 17, 19, 20, 21, 22, 24, 25] },
+      { nome: "Diego", aposta: [1, 2, 3, 4, 5, 7, 9, 10, 12, 14, 17, 21, 22, 24, 25] },
+      { nome: "Paulo", aposta: [4, 5, 6, 7, 8, 9, 10, 16, 18, 19, 20, 21, 23, 24, 25] },
+      { nome: "Perdigueiro", aposta: [2, 3, 5, 6, 7, 10, 12, 13, 14, 17, 19, 20, 21, 23, 24] },
+      { nome: "Thales", aposta: [3, 4, 5, 8, 9, 10, 12, 14, 15, 16, 17, 19, 21, 22, 25] },
+      { nome: "Ronaldo", aposta: [1, 4, 6, 7, 8, 9, 10, 11, 15, 16, 17, 19, 21, 24, 25] },
+      { nome: "Chupin", aposta: [2, 3, 4, 7, 8, 9, 10, 12, 14, 15, 17, 18, 19, 20, 21] }
+    ];
+
+    async function carregarResultado() {
+      try {
+        const res = await fetch('https://loteriascaixa-api.herokuapp.com/api/lotofacil/latest');
+        const data = await res.json();
+
+        const numerosSorteados = data.dezenas.map(n => parseInt(n));
+        const concurso = data.concurso;
+        const dataSorteio = data.data;
+        const diaSemana = new Date(dataSorteio).toLocaleDateString('pt-BR', { weekday: 'long' });
+
+        document.getElementById('resultado').innerHTML = `
+          <h2>Concurso ${concurso} - ${diaSemana}, ${dataSorteio}</h2>
+          <div class="numeros">
+            ${numerosSorteados.map(n => `<div class="numero acerto">${n}</div>`).join('')}
+          </div>
+        `;
+
+        let totalGeral = 0;
+        let destaque = false;
+        let html = '';
+
+        jogadores.forEach(j => {
+          const acertos = j.aposta.filter(n => numerosSorteados.includes(n));
+          const qtdAcertos = acertos.length;
+          let premio = 0;
+          if (qtdAcertos === 11) premio = 6;
+          else if (qtdAcertos === 12) premio = 12;
+          else if (qtdAcertos === 13) premio = 30;
+          else if (qtdAcertos > 13) destaque = true;
+
+          totalGeral += premio;
+
+          html += `
+            <div class="jogador ${qtdAcertos > 13 ? 'ganhou' : ''}">
+              <h3>${j.nome}</h3>
+              <div class="numeros">
+                ${j.aposta.map(n => `<div class="numero ${numerosSorteados.includes(n) ? 'acerto' : 'erro'}">${n}</div>`).join('')}
+              </div>
+              <p>${qtdAcertos > 11 ? `${qtdAcertos} acertos - R$ ${premio}` : 'continue acreditando'}</p>
+            </div>
+          `;
+        });
+
+        document.getElementById('jogadores').innerHTML = html;
+
+        if (destaque) {
+          const fogos = document.getElementById('fogos');
+          fogos.style.display = 'block';
+          setTimeout(() => fogos.style.display = 'none', 5000);
+        }
+
+      } catch (e) {
+        alert('Erro ao buscar resultado. Tente novamente mais tarde.');
+        console.error(e);
+      }
+    }
+  </script>
+</body>
+</html>
