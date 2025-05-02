@@ -131,7 +131,7 @@
               <div class="numeros">
                 ${j.aposta.map(n => `<div class="numero ${numerosSorteados.includes(n) ? 'acerto' : 'erro'}">${n}</div>`).join('')}
               </div>
-              <p>${qtdAcertos > 11 ? `${qtdAcertos} acertos - R$ ${premio}` : 'continue acreditando'}</p>
+              <p>${qtdAcertos} acertos${premio > 0 ? ` - R$ ${premio}` : ''}</p>
             </div>
           `;
         });
@@ -152,3 +152,4 @@
   </script>
 </body>
 </html>
+
