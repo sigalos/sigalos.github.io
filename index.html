@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -6,21 +7,22 @@
   <title>Conferidor Lotofácil</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: Verdana, sans-serif;
       margin: 0;
       padding: 10px;
-      background: #f2f2f2;
-      color: #333;
+      background: #121212;
+      color: #f0f0f0;
     }
-    h1, h2 {
+    h1, h2, h3 {
       text-align: center;
+      color: #ffffff;
     }
-    .resultado, .jogador, .total-ganho {
-      background: #fff;
+    .resultado, .jogador, .total-ganho, .input-box {
+      background: #1e1e1e;
       border-radius: 8px;
       padding: 10px;
       margin-bottom: 15px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(255,255,255,0.05);
     }
     .numeros {
       display: flex;
@@ -36,22 +38,25 @@
       font-weight: bold;
     }
     .acerto {
-      background: #7FFF7F;
+      background: #4caf50;
+      color: #000;
     }
     .erro {
-      background: #FF7F7F;
+      background: #f44336;
+      color: #000;
     }
     .botao {
       display: block;
       width: 100%;
       padding: 15px;
       font-size: 16px;
-      margin: 20px 0;
+      margin: 10px 0;
       background: #4CAF50;
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     }
     .fogos {
       position: fixed;
@@ -72,14 +77,33 @@
       50% { background-color: yellow; }
       100% { background-color: #fff; }
     }
+    .botao-share {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      font-size: 16px;
+      margin-top: 10px;
+      background: #25D366;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
   </style>
 </head>
 <body>
   <h1>Conferidor Lotofácil</h1>
-  <button class="botao" onclick="carregarResultado()">Conferir Resultado</button>
+  <button class="botao" onclick="carregarResultado()">Buscar Resultado Automaticamente</button>
+  <div class="input-box">
+    <label for="manual">Ou copie da internet e cole aqui&#x1F447;&#x1F447;&#x1F447;:</label>
+    <input type="text" id="manual" placeholder="Cole os 15 números aqui" style="width: 100%; padding: 10px; margin-top: 5px; font-size: 16px;">
+    <button class="botao" onclick="usarManual()">Depois de colar resultado aperte aqui</button>
+  </div>
   <div class="resultado" id="resultado"></div>
   <div id="jogadores"></div>
   <div class="total-ganho" id="total"></div>
+  <button class="botao-share" id="botaoCompartilhar" style="display: none;" onclick="compartilharResultado()">Compartilhar no WhatsApp</button>
   <div class="fogos" id="fogos"></div>
 
   <script>
@@ -94,62 +118,85 @@
       { nome: "Chupin", aposta: [2, 3, 4, 7, 8, 9, 10, 12, 14, 15, 17, 18, 19, 20, 21] }
     ];
 
+    let resultadoTextoFinal = '';
+
     async function carregarResultado() {
       try {
         const res = await fetch('https://loteriascaixa-api.herokuapp.com/api/lotofacil/latest');
         const data = await res.json();
-
-        const numerosSorteados = data.dezenas.map(n => parseInt(n));
-        const concurso = data.concurso;
-        const dataSorteio = data.data;
-        const diaSemana = new Date(dataSorteio).toLocaleDateString('pt-BR', { weekday: 'long' });
-
-        document.getElementById('resultado').innerHTML = `
-          <h2>Concurso ${concurso} - ${diaSemana}, ${dataSorteio}</h2>
-          <div class="numeros">
-            ${numerosSorteados.map(n => `<div class="numero acerto">${n}</div>`).join('')}
-          </div>
-        `;
-
-        let totalGeral = 0;
-        let destaque = false;
-        let html = '';
-
-        jogadores.forEach(j => {
-          const acertos = j.aposta.filter(n => numerosSorteados.includes(n));
-          const qtdAcertos = acertos.length;
-          let premio = 0;
-          if (qtdAcertos === 11) premio = 6;
-          else if (qtdAcertos === 12) premio = 12;
-          else if (qtdAcertos === 13) premio = 30;
-          else if (qtdAcertos > 13) destaque = true;
-
-          totalGeral += premio;
-
-          html += `
-            <div class="jogador ${qtdAcertos > 13 ? 'ganhou' : ''}">
-              <h3>${j.nome}</h3>
-              <div class="numeros">
-                ${j.aposta.map(n => `<div class="numero ${numerosSorteados.includes(n) ? 'acerto' : 'erro'}">${n}</div>`).join('')}
-              </div>
-              <p>${qtdAcertos} acertos${premio > 0 ? ` - R$${premio.toFixed(2).replace('.', ',')}` : ''}</p>
-            </div>
-          `;
-        });
-
-        document.getElementById('jogadores').innerHTML = html;
-        document.getElementById('total').innerHTML = `<h3>Total ganho neste concurso: R$${totalGeral.toFixed(2).replace('.', ',')}</h3>`;
-
-        if (destaque) {
-          const fogos = document.getElementById('fogos');
-          fogos.style.display = 'block';
-          setTimeout(() => fogos.style.display = 'none', 5000);
-        }
-
+        console.log("Resultado carregado:", data);
+        conferir(data.dezenas.map(n => parseInt(n)), data.concurso);
       } catch (e) {
         alert('Erro ao buscar resultado. Tente novamente mais tarde.');
         console.error(e);
       }
+    }
+
+    function usarManual() {
+      const entrada = document.getElementById('manual').value;
+      const numeros = entrada.replace(/\D/g, '').match(/\d{2}/g)?.map(n => parseInt(n)).sort((a,b) => a - b);
+      if (!numeros || numeros.length !== 15) {
+        alert('Digite ou cole exatamente 15 números válidos.');
+        return;
+      }
+      conferir(numeros, 'Manual');
+    }
+
+    function conferir(numerosSorteados, concurso) {
+      document.getElementById('resultado').innerHTML = `
+        <h2>Concurso ${concurso}</h2>
+        <div class="numeros">
+          ${numerosSorteados.map(n => `<div class="numero acerto">${n}</div>`).join('')}
+        </div>
+      `;
+
+      let totalGeral = 0;
+      let destaque = false;
+      let html = '';
+
+      resultadoTextoFinal = `Resultado Lotofácil - Concurso ${concurso}\nNúmeros sorteados: ${numerosSorteados.join(', ')}\n\n`;
+
+      jogadores.forEach(j => {
+        const acertos = j.aposta.filter(n => numerosSorteados.includes(n));
+        const qtdAcertos = acertos.length;
+        let premio = 0;
+        if (qtdAcertos === 11) premio = 6;
+        else if (qtdAcertos === 12) premio = 12;
+        else if (qtdAcertos === 13) premio = 30;
+        else if (qtdAcertos > 13) destaque = true;
+
+        totalGeral += premio;
+
+        html += `
+          <div class="jogador ${qtdAcertos > 13 ? 'ganhou' : ''}">
+            <h3>${j.nome}</h3>
+            <div class="numeros">
+              ${j.aposta.map(n => `<div class="numero ${numerosSorteados.includes(n) ? 'acerto' : 'erro'}">${n}</div>`).join('')}
+            </div>
+            <p>${qtdAcertos} acertos${premio > 0 ? ` - R$${premio.toFixed(2).replace('.', ',')}` : ''}</p>
+          </div>
+        `;
+
+        resultadoTextoFinal += `${j.nome}: ${qtdAcertos} acertos${premio > 0 ? ` - R$${premio.toFixed(2).replace('.', ',')}` : ''}\n`;
+      });
+
+      document.getElementById('jogadores').innerHTML = html;
+      document.getElementById('total').innerHTML = `<h3>Total ganho neste concurso: R$${totalGeral.toFixed(2).replace('.', ',')}</h3>`;
+
+      resultadoTextoFinal += `\nTotal ganho: R$${totalGeral.toFixed(2).replace('.', ',')}`;
+      document.getElementById('botaoCompartilhar').style.display = 'block';
+
+      if (destaque) {
+        const fogos = document.getElementById('fogos');
+        fogos.style.display = 'block';
+        setTimeout(() => fogos.style.display = 'none', 5000);
+      }
+    }
+
+    function compartilharResultado() {
+      const texto = encodeURIComponent(resultadoTextoFinal);
+      const url = `https://wa.me/?text=${texto}`;
+      window.open(url, '_blank');
     }
   </script>
 </body>
