@@ -118,8 +118,23 @@
     ];
 
     let resultadoTextoFinal = '';
+async function carregarResultado() {
+  try {
+    const res = await fetch('https://loteriascaixa-api.herokuapp.com/api/lotofacil/latest');
+    const data = await res.json();
+    console.log("Resultado carregado:", data);
 
-    async function carregarResultado() {
+    // Corrigindo o formato da data para dd/mm/aaaa
+    const [ano, mes, dia] = data.data.split('T')[0].split('-');
+    const dataConcurso = `${dia}/${mes}/${ano}`;
+
+    conferir(data.dezenas.map(n => parseInt(n)), `${data.concurso} - ${dataConcurso}`);
+  } catch (e) {
+    alert('Erro ao buscar resultado. Tente novamente mais tarde.');
+    console.error(e);
+  }
+}
+    /*async function carregarResultado() {
       try {
         const res = await fetch('https://loteriascaixa-api.herokuapp.com/api/lotofacil/latest');
         const data = await res.json();
@@ -130,7 +145,7 @@
         alert('Erro ao buscar resultado. Tente novamente mais tarde.');
         console.error(e);
       }
-    }
+    }*/
     function usarManual() {
       const entrada = document.getElementById('manual').value;
       const numeros = entrada.replace(/\D/g, '').match(/\d{2}/g)?.map(n => parseInt(n)).sort((a,b) => a - b);
