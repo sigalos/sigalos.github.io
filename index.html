@@ -11,6 +11,10 @@
       padding: 10px;
       background: #121212;
       color: #f0f0f0;
+      /* Adicione estas linhas para a imagem de fundo local */
+      background-image: url('C:/exercicios/Nova pasta (2)/lotofacil.jpg');
+      background-size: cover; /* Para cobrir todo o fundo */
+      background-repeat: no-repeat; /* Para não repetir a imagem */
     }
     h1, h2, h3 {
       text-align: center;
@@ -93,9 +97,13 @@
 </head>
 <body>
   <h1>Conferidor Lotofácil</h1>
-  <button class="botao" onclick="carregarResultado()">Buscar Resultado Automaticamente</button>
+  <button class="botao" onclick="carregarResultado()">
+    Buscar Resultado Automaticamente<br>
+    <small style="font-size: 12px;">(Disponível após às 22h)</small>
+  </button>
+
   <div class="input-box">
-    <label for="manual">Ou copie da internet e cole aqui&#x1F447;&#x1F447;&#x1F447;:</label>
+    <label for="manual">Ou copie da internet e cole aqui👇👇👇:</label>
     <input type="text" id="manual" placeholder="Cole os 15 números aqui" style="width: 100%; padding: 10px; margin-top: 5px; font-size: 16px;">
     <button class="botao" onclick="usarManual()">Depois de colar resultado aperte aqui</button>
   </div>
@@ -107,44 +115,34 @@
 
   <script>
     const jogadores = [
-      { nome: "Moacir", aposta: [1, 2, 4, 5, 7, 8, 10, 12, 13, 14, 16, 18, 20, 23, 25] },        
-  /*  { nome: "Gargamel", aposta: [2, 4, 5, 7, 10, 12, 14, 15, 17, 19, 20, 21, 22, 24, 25] },
-      { nome: "Diego", aposta: [1, 2, 3, 4, 5, 7, 9, 10, 12, 14, 17, 21, 22, 24, 25] },
-      { nome: "Paulo", aposta: [4, 5, 6, 7, 8, 9, 10, 16, 18, 19, 20, 21, 23, 24, 25] },
-      { nome: "Perdigueiro", aposta: [2, 3, 5, 6, 7, 10, 12, 13, 14, 17, 19, 20, 21, 23, 24] },
-      { nome: "Thales", aposta: [3, 4, 5, 8, 9, 10, 12, 14, 15, 16, 17, 19, 21, 22, 25] },
-      { nome: "Ronaldo", aposta: [1, 4, 6, 7, 8, 9, 10, 11, 15, 16, 17, 19, 21, 24, 25] }, */
+      { nome: "Moacir", aposta: [1, 2, 4, 5, 7, 8, 10, 12, 13, 14, 16, 18, 20, 23, 25] },
+      /* { nome: "Gargamel", aposta: [2, 4, 5, 7, 10, 12, 14, 15, 17, 19, 20, 21, 22, 24, 25] },
+        { nome: "Diego", aposta: [1, 2, 3, 4, 5, 7, 9, 10, 12, 14, 17, 21, 22, 24, 25] },
+        { nome: "Paulo", aposta: [4, 5, 6, 7, 8, 9, 10, 16, 18, 19, 20, 21, 23, 24, 25] },
+        { nome: "Perdigueiro", aposta: [2, 3, 5, 6, 7, 10, 12, 13, 14, 17, 19, 20, 21, 23, 24] },
+        { nome: "Thales", aposta: [3, 4, 5, 8, 9, 10, 12, 14, 15, 16, 17, 19, 21, 22, 25] },
+        { nome: "Ronaldo", aposta: [1, 4, 6, 7, 8, 9, 10, 11, 15, 16, 17, 19, 21, 24, 25] }, */
       { nome: "Chupin", aposta: [2, 3, 4, 7, 8, 9, 10, 12, 14, 15, 17, 18, 19, 20, 21] }
     ];
 
-  async function carregarResultado() {
-  try {
-    const res = await fetch('https://loteriascaixa-api.herokuapp.com/api/lotofacil/latest');
-    const data = await res.json();
-    console.log("Resultado carregado:", data);
+    async function carregarResultado() {
+    try {
+      const res = await fetch('https://loteriascaixa-api.herokuapp.com/api/lotofacil/latest');
+      const data = await res.json();
+      console.log("Resultado carregado:", data);
 
-    // Corrigindo o formato da data para dd/mm/aaaa
-    const [ano, mes, dia] = data.data.split('T')[0].split('-');
-    const dataConcurso = `${dia}/${mes}/${ano}`;
-
-    conferir(data.dezenas.map(n => parseInt(n)), `${data.concurso} - ${dataConcurso}`);
-  } catch (e) {
-    alert('Erro ao buscar resultado. Tente novamente mais tarde.');
-    console.error(e);
+      const dataFormatada = new Date(data.data).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+  conferir(data.dezenas.map(n => parseInt(n)), `${data.concurso} - ${dataFormatada}`);
+    } catch (e) {
+      alert('Erro ao buscar resultado. Tente novamente mais tarde.');
+      console.error(e);
+    }
   }
-}
-    /*async function carregarResultado() {
-      try {
-        const res = await fetch('https://loteriascaixa-api.herokuapp.com/api/lotofacil/latest');
-        const data = await res.json();
-        console.log("Resultado carregado:", data);
-        const dataConcurso = new Date(data.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-        conferir(data.dezenas.map(n => parseInt(n)), `${data.concurso} - ${dataConcurso}`);
-      } catch (e) {
-        alert('Erro ao buscar resultado. Tente novamente mais tarde.');
-        console.error(e);
-      }
-    }*/
+
     function usarManual() {
       const entrada = document.getElementById('manual').value;
       const numeros = entrada.replace(/\D/g, '').match(/\d{2}/g)?.map(n => parseInt(n)).sort((a,b) => a - b);
