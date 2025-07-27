@@ -180,9 +180,9 @@
         const acertos = j.aposta.filter(n => numerosSorteados.includes(n));
         const qtdAcertos = acertos.length;
         let premio = 0;
-        if (qtdAcertos === 11) premio = 6;
-        else if (qtdAcertos === 12) premio = 12;
-        else if (qtdAcertos === 13) premio = 30;
+        if (qtdAcertos === 11) premio = 7;
+        else if (qtdAcertos === 12) premio = 14;
+        else if (qtdAcertos === 13) premio = 35;
         else if (qtdAcertos > 13) destaque = true;
 
         totalGeral += premio;
